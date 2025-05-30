@@ -62,4 +62,26 @@ public class AuthControllerTest {
                 .andExpect(jsonPath("$.token").value("fake-jwt-token"))
                 .andExpect(jsonPath("$.type").value("Bearer"));
     }
+    @Test
+void testLoginWithInvalidCredentials() throws Exception {
+    // Préparation des données
+    String jsonRequest = """
+        {
+            "username": "admin",
+            "password": "wrongpassword"
+        }
+        """;
+
+    // Simuler une exception d'authentification
+    when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+        .thenThrow(new org.springframework.security.core.AuthenticationException("Bad credentials") {});
+
+    // Exécution de la requête POST /api/user/login
+    mockMvc.perform(post("/api/user/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(jsonRequest))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().string("Invalid Username or Password"));
+}
+
 }
