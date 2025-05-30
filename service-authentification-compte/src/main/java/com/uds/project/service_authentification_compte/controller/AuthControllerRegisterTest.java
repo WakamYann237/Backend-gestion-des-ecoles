@@ -46,7 +46,6 @@ class AuthControllerRegisterTest {
 
     @Test
     void testRegister_Success() throws Exception {
-        // 🔹 Préparation
         String username = "newuser";
         String password = "password123";
         String encodedPassword = "encodedPassword";
@@ -63,7 +62,6 @@ class AuthControllerRegisterTest {
             return user;
         });
 
-        // 🔹 Requête JSON
         String jsonRequest = """
             {
                 "username": "newuser",
@@ -72,7 +70,6 @@ class AuthControllerRegisterTest {
             }
             """;
 
-        // 🔹 Test HTTP
         mockMvc.perform(post("/api/user/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
@@ -119,6 +116,6 @@ void testRegister_Fail_RoleNotFound() throws Exception {
     mockMvc.perform(post("/api/user/register")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(jsonRequest))
-            .andExpect(status().isInternalServerError()); // ou 500 selon ton contrôleur
+            .andExpect(status().isInternalServerError());
 }
 }
