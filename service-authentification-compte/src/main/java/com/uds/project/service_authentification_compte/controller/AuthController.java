@@ -3,6 +3,7 @@ package com.uds.project.service_authentification_compte.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +35,7 @@ import com.uds.project.service_authentification_compte.exception.UserNotFoundExc
 import com.uds.project.service_authentification_compte.repository.RoleRepository;
 import com.uds.project.service_authentification_compte.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -160,8 +162,6 @@ public ResponseEntity<RegisterDto> updateUser(@PathVariable Long id, @RequestBod
 
     // Sauvegarde de l'utilisateur avec tous les changements (username, password, roles)
     User updatedUser = userRepository.save(existUser);
-
-    // Création du DTO de réponse
     Set<String> roleNames = updatedUser.getRoles()
                                        .stream()
                                        .map(Role::getName)
@@ -171,14 +171,26 @@ public ResponseEntity<RegisterDto> updateUser(@PathVariable Long id, @RequestBod
 
     return ResponseEntity.ok(dto);
 }
-@DeleteMapping("/user/{id}")
+@Transactional
+@DeleteMapping("/user/delete/{id}")
 @PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+public ResponseEntity<String> deleteUser(@PathVariable Long id) {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new UserNotFoundException("User not found."));
-    
+
+    String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+    if (user.getUsername().equals(currentUsername)) {
+        throw new IllegalArgumentException("You cannot delete your own account.");
+    }
+
+    // Vider les rôles avant suppression (à cause de la contrainte FK)
+    user.getRoles().clear();
+    userRepository.save(user); // pour appliquer les modifications dans la table intermédiaire
+
     userRepository.delete(user);
-    return ResponseEntity.ok().build();
+
+    return ResponseEntity.ok("Utilisateur supprimé avec succès.");
 }
+
 
 }
