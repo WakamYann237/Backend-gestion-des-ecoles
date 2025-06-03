@@ -18,7 +18,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-//on va definir specifiquement un filtre jwt pour permetrre que chaque requette qui va passer doit etre filtrer par le jwt
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
