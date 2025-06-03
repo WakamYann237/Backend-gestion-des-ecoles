@@ -57,9 +57,11 @@ public ResponseEntity<?> register(@RequestBody RegisterDto registerDto) {
         return ResponseEntity.badRequest().body("Username already exists");
     }
 
+    String encodedPassword = passwordEncoder.encode(registerDto.getPassword());
+
     User user = new User();
     user.setUsername(registerDto.getUsername());
-    user.setPassword(passwordEncoder.encode(registerDto.getPassword()));
+    user.setPassword(encodedPassword);
 
     Set<Role> roles = new HashSet<>();
     for (String roleName : registerDto.getRoleNames()) {
@@ -69,18 +71,19 @@ public ResponseEntity<?> register(@RequestBody RegisterDto registerDto) {
     }
     user.setRoles(roles);
 
-    // 🔹 Sauvegarde d'abord
     User savedUser = userRepository.save(user);
 
-    // 🔹 Création du DTO de réponse
     Set<String> roleNames = savedUser.getRoles()
         .stream()
         .map(Role::getName)
         .collect(Collectors.toSet());
 
-    RegisterDto userDto = new RegisterDto(savedUser.getUsername(), roleNames);
+    Map<String, Object> response = new HashMap<>();
+    response.put("username", savedUser.getUsername());
+    response.put("password", encodedPassword); // ← mot de passe chiffré
+    response.put("roles", roleNames);
 
-    return ResponseEntity.ok(userDto);
+    return ResponseEntity.ok(response);
 }
 
 @PostMapping("/user/login")
@@ -120,7 +123,7 @@ public ResponseEntity<List<RegisterDto>> getAllPersonnes() {
                                         .stream()
                                         .map(Role::getName)
                                         .collect(Collectors.toSet());
-            return new RegisterDto(user.getUsername(), null, roleNames);
+            return new RegisterDto(user.getUsername(), user.getPassword(), roleNames);
         })
         .collect(Collectors.toList());
 
@@ -131,12 +134,12 @@ public ResponseEntity<List<RegisterDto>> getAllPersonnes() {
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<RegisterDto> getElementById(@PathVariable Long id) {
     User user = userRepository.findById(id)
-                              .orElseThrow(() -> new UserNotFoundException("Personne not found."));
+                              .orElseThrow(() -> new UserNotFoundException("User not found."));
     Set<String> roleNames = user.getRoles()
                                 .stream()
                                 .map(Role::getName)
                                 .collect(Collectors.toSet());
-    RegisterDto dto = new RegisterDto(user.getUsername(), roleNames);
+    RegisterDto dto = new RegisterDto(user.getUsername(),user.getPassword(), roleNames);
     return ResponseEntity.ok(dto);
 }
 @PutMapping("/user/{id}")
@@ -167,7 +170,7 @@ public ResponseEntity<RegisterDto> updateUser(@PathVariable Long id, @RequestBod
                                        .map(Role::getName)
                                        .collect(Collectors.toSet());
 
-    RegisterDto dto = new RegisterDto(updatedUser.getUsername(), roleNames);
+    RegisterDto dto = new RegisterDto(updatedUser.getUsername(),updatedUser.getPassword(), roleNames);
 
     return ResponseEntity.ok(dto);
 }
@@ -183,9 +186,8 @@ public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         throw new IllegalArgumentException("You cannot delete your own account.");
     }
 
-    // Vider les rôles avant suppression (à cause de la contrainte FK)
     user.getRoles().clear();
-    userRepository.save(user); // pour appliquer les modifications dans la table intermédiaire
+    userRepository.save(user);
 
     userRepository.delete(user);
 
