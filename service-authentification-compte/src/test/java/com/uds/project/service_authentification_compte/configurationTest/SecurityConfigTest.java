@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.uds.project.service_authentification_compte.entity.Role;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Set;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -58,12 +60,12 @@ public class SecurityConfigTest {
 
     @Test
 public void testLoginEndpointAccessibleWithoutAuth() throws Exception {
-    Role userRole = roleRepository.findByName("USER")
-        .orElseGet(() -> roleRepository.save(Role.builder().name("USER").description("Default user role").build()));
+    Role userRole = roleRepository.findByName("ROLE_ADMIN")
+        .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_ADMIN").description("role admin").build()));
 
     User user = User.builder()
-        .username("test")
-        .password(passwordEncoder.encode("test"))
+        .username("xavi")
+        .password(passwordEncoder.encode("admin"))
         .roles(Set.of(userRole))
         .build();
 
@@ -71,7 +73,7 @@ public void testLoginEndpointAccessibleWithoutAuth() throws Exception {
 
     mockMvc.perform(post("/api/user/login")
             .contentType(MediaType.APPLICATION_JSON)
-            .content("{\"username\":\"test\",\"password\":\"test\"}"))
+            .content("{\"username\":\"xavi\",\"password\":\"admin\"}"))
         .andExpect(status().isOk());
 }
 }
