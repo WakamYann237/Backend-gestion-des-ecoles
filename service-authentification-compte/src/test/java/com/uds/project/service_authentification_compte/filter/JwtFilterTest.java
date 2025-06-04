@@ -19,10 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.uds.project.service_authentification_compte.configuration.JwtUtils;
 import com.uds.project.service_authentification_compte.service.UserService;
 
+@ActiveProfiles("test")
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 public class JwtFilterTest {

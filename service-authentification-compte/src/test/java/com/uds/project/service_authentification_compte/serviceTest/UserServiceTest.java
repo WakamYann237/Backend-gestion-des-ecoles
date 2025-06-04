@@ -7,16 +7,25 @@ import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.mockito.*;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.uds.project.service_authentification_compte.entity.Role;
 import com.uds.project.service_authentification_compte.entity.User;
 import com.uds.project.service_authentification_compte.repository.UserRepository;
 import com.uds.project.service_authentification_compte.service.UserService;
 
+import jakarta.transaction.Transactional;
+
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Transactional
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest
 public class UserServiceTest {
 
@@ -34,21 +43,21 @@ public class UserServiceTest {
     @Test
     public void testLoadUserByUsername_UserFound() {
         User user = new User();
-        user.setUsername("testuser");
+        user.setUsername("testuser2");
         user.setPassword("testpass");
         Role role = new Role();
-        role.setName("ROLE_USER");
+        role.setName("ROLE_ADMIN");
         user.setRoles(Set.of(role));
 
-        when(userRepository.findByUsername("testuser")).thenReturn(user);
+        when(userRepository.findByUsername("testuser2")).thenReturn(user);
 
-        UserDetails userDetails = userService.loadUserByUsername("testuser");
+        UserDetails userDetails = userService.loadUserByUsername("testuser2");
 
         assertNotNull(userDetails);
-        assertEquals("testuser", userDetails.getUsername());
+        assertEquals("testuser2", userDetails.getUsername());
         assertEquals("testpass", userDetails.getPassword());
         assertTrue(userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_USER")));
+                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN")));
     }
 
     @Test

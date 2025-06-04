@@ -4,6 +4,7 @@ package com.uds.project.service_authentification_compte.configurationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.uds.project.service_authentification_compte.configuration.JwtUtils;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ActiveProfiles("test")
 @SpringBootTest
 public class JwtUtilsTest {
 
@@ -47,20 +49,20 @@ public class JwtUtilsTest {
     public void testExpiredToken() throws InterruptedException {
         JwtUtils jwtUtils = new JwtUtils();
 
-        // Clé et expiration simulées
+        // Injection des champs privés
         setField(jwtUtils, "secretKey", "test_secret35577888890065543225667890928764432111234456");
         setField(jwtUtils, "expirationTime", 1L);
 
         String username = "testuser";
         String token = jwtUtils.generateToken(username);
 
-        Thread.sleep(2);
+        Thread.sleep(10); // Assurer l’expiration
 
         UserDetails userDetails = User.withUsername(username).password("").authorities(Set.of()).build();
-
         assertFalse(jwtUtils.validateToken(token, userDetails));
     }
 
+    // Méthode utilitaire pour injecter des valeurs dans des champs privés
     private void setField(Object target, String fieldName, Object value) {
         try {
             java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);

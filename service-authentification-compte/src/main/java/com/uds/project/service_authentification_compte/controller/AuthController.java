@@ -154,7 +154,6 @@ public ResponseEntity<RegisterDto> updateUser(@PathVariable Long id, @RequestBod
         existUser.setPassword(passwordEncoder.encode(userDetail.getPassword()));
     }
 
-    // Mise à jour des rôles AVANT la sauvegarde
     if (userDetail.getRoleNames() != null && !userDetail.getRoleNames().isEmpty()) {
         Set<Role> roles = userDetail.getRoleNames().stream()
             .map(roleName -> roleRepository.findByName(roleName)
